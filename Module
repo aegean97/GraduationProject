@@ -1,0 +1,552 @@
+import math
+from collections import deque
+import re
+
+
+class DS:
+    DNA_dictionary = {"A": 0, "T": 1, "G": 2, "C": 3, "K": 4, "M": 5, "R": 6, "Y": 7, "S": 8, "W": 9, "B": 10,
+                      "V": 11, "H": 12, "D": 13, "X": 14, "N": 14}
+    RNA_dictionary = {"A": 0, "U": 1, "G": 2, "C": 3, "K": 4, "M": 5, "R": 6, "Y": 7, "S": 8, "W": 9, "B": 10,
+                      "V": 11, "H": 12, "D": 13, "X": 14, "N": 14}
+    numericalToChar = {A: B for B, A in DNA_dictionary.items()}
+    numericalToCharRNA = {A: B for B, A in RNA_dictionary.items()}
+
+    # K = G or T
+    # M = A or C
+    # R = A or G
+    # Y = C or T
+    # S = C or G
+    # W = A or T
+    # B = C or T or G
+    # V = A or C or G
+    # H = A or C or T
+    # D = A or G or T
+    # X or N = A or T or G or C
+
+    def __init__(self, sequence_string1, sequence_string2):
+        sequence_string1 = sequence_string1.upper()
+        sequence_string2 = sequence_string2.upper()
+        self.numerical_Sequence1 = []
+        self.numerical_Sequence2 = []
+
+        for i in sequence_string1:
+            self.numerical_Sequence1.append(self.DNA_dictionary[i])
+        for i in sequence_string2:
+            self.numerical_Sequence2.append(self.DNA_dictionary[i])
+
+    def __repr__(self):
+        return str(self.numerical_Sequence1) + "," + str(self.numerical_Sequence2)
+
+    def Printing(self):
+        print(self.numerical_Sequence1, self.numerical_Sequence2)
+        return self.numerical_Sequence1, self.numerical_Sequence2
+
+    def toList(self, primer):
+        for i in self.numerical_Sequence1:
+            primer.append(self.numerical_Sequence1[i])
+
+    def toList2(self, primer):
+        for i in self.numerical_Sequence2:
+            primer.append(self.numerical_Sequence2[i])
+
+    def length_diff(self):
+        primer1 = []
+        primer2 = []
+        self.toList(primer1)
+        self.toList2(primer2)
+        diff = len(primer1) - len(primer2)
+        return diff
+
+    def GlobalAlignment(self):
+        primer1 = []
+        primer2 = []
+        self.toList(primer1)
+        for i in self.numerical_Sequence2:
+            primer2.append(self.numerical_Sequence2[i])
+        match = 0
+        mismatch = 0
+        print("First primer:", primer1)
+        print("Second primer:", primer2)
+        if len(self.numerical_Sequence1) > len(self.numerical_Sequence2):
+            gap = len(self.numerical_Sequence1) - len(self.numerical_Sequence2)
+            for i in self.numerical_Sequence2:
+                if self.numerical_Sequence1[i] == self.numerical_Sequence2[i]:
+                    match += 1
+                    print(f"{self.numerical_Sequence1[i]} == {self.numerical_Sequence2[i]}")
+                else:
+                    mismatch += 1
+                    print(f"{self.numerical_Sequence1[i]} != {self.numerical_Sequence2[i]}")
+
+        else:
+            gap = len(self.numerical_Sequence2) - len(self.numerical_Sequence1)
+            for i in self.numerical_Sequence1:
+                if self.numerical_Sequence1[i] == self.numerical_Sequence2[i]:
+                    print(f"{self.numerical_Sequence1[i]} == {self.numerical_Sequence2[i]}")
+
+                    match += 1
+                else:
+                    mismatch += 1
+                    print(f"{self.numerical_Sequence1[i]} != {self.numerical_Sequence2[i]}")
+
+        final_score = match * 1 - mismatch * 2 - gap * 3
+        print(f"Match Score:{match}\nMismatch Score:{mismatch}\nGap Penalty:{gap}")
+        return final_score
+
+    def evenOdd(self, primer):
+        if len(primer) % 2 == 0:
+            return True
+        else:
+            return False
+
+    def complimentary(self):
+        my_list = []
+        my_complementary = []
+        self.toList(my_list)
+        for i in my_list:
+            if i == 0:
+                my_complementary.append(1)
+            elif i == 1:
+                my_complementary.append(0)
+            elif i == 2:
+                my_complementary.append(3)
+            elif i == 3:
+                my_complementary.append(2)
+            elif i == 8:
+                my_complementary.append(8)
+            elif i == 9:
+                my_complementary.append(9)
+        return my_complementary
+
+    def TMPr(self, concentration, salt):
+
+        print("TMPr")
+        primer1 = []
+        primer2 = []
+        primer1_complementary_list = []
+        mismatch_added_list = []
+        mismatch = 0
+        """
+        R = 0.0821 liter·atm/mol·K
+        R = 8.3145 J/mol·K
+        R = 8.2057 m3·atm/mol·K
+        R = 62.3637 L·Torr/mol·K or L·mmHg/mol·K
+        """
+
+        for i in self.numerical_Sequence1:
+            primer1.append(i)
+        for i in self.numerical_Sequence2:
+            primer2.append(i)
+        for i in primer1:
+            if i == 0:
+                primer1_complementary_list.append(1)
+            elif i == 1:
+                primer1_complementary_list.append(0)
+            elif i == 2:
+                primer1_complementary_list.append(3)
+            elif i == 3:
+                primer1_complementary_list.append(2)
+            elif i == 8:
+                primer1_complementary_list.append(8)
+            elif i == 9:
+                primer1_complementary_list.append(9)
+
+        for i in range(len(primer1_complementary_list)):
+            if primer1_complementary_list[i] == primer2[i]:
+                mismatch_added_list.append(primer1_complementary_list[i])
+
+        mismatch = len(primer1) - len(mismatch_added_list)
+        ratio = len(mismatch_added_list) / len(primer1) * 100
+        ratio = 100 - ratio
+
+        String_Sequence = [self.numericalToChar[i] for i in primer1_complementary_list]
+        DH_dict = {
+            # "A": 0, "T": 0,  # A/T
+            # "G": 0, "C": 0,  # G/C
+            "AA": -9.1, "TT": -9.1,
+            "AT": -8.6, "TA": 6.0,
+            "CA": -5.8, "GT": -6.5,
+            "CT": -7.8, "GA": -5.6,
+            "CG": -11.9, "GC": -11.1,
+            "GG": -11.0, "CC": -11.0,
+            "TG": -5.8, "AC": -6.5,
+            "TC": -5.6, "AG": -7.8
+        }
+        DS_dict = {
+            "AA": -0.0240, "TT": -0.0240,
+            "AT": -0.0239, "TA": -0.0169,
+            "CA": -0.0129, "GT": -0.0173,
+            "CT": -0.0208, "GA": -0.0135,
+            "CG": -0.0278, "GC": -0.0267,
+            "GG": -0.0266, "CC": -0.0266,
+            "TG": -0.0129, "AC": -0.0173,
+            "TC": -0.0135, "AG": -0.0208
+        }
+        # String_Sequence += ["G" if "G" in String_Sequence else "A"]
+        primer1_dict = [String_Sequence[i] + String_Sequence[i + 1] for i in range(len(String_Sequence) - 1)]
+        DeltaHs = [DH_dict[i] for i in primer1_dict]  # KJ/Mol
+        DeltaSs = [DS_dict[i] for i in primer1_dict]  # Joule/Mol*K
+        DeltaH = sum(DeltaHs)
+        DeltaS = sum(DeltaSs)
+
+        R = 0.00199  # kcal/K*Mol   ideal gas constant
+        A = -0.0108  # kcal/K*Mol   Accounts for helix initiation during annealing / melting
+        # NA = 0.05  # Molar   Sodium concentration
+
+        T = math.log(concentration / 4)
+        T = T * R
+        T = T + A + DeltaS
+        T = DeltaH / T
+        T = T - 273.15
+        Salt = 16.6 * math.log10(salt)
+        T = T + Salt
+        T = T - ratio
+
+        print("DeltaH: ", "{:.3f}".format(DeltaH))
+        print("DeltaS: ", "{:.3f}".format(DeltaS))
+
+        return "{:.3f}".format(T)
+
+
+class Seq:
+    DNA_dictionary = {"A": 0, "T": 1, "G": 2, "C": 3, "K": 4, "M": 5, "R": 6, "Y": 7, "S": 8, "W": 9, "B": 10,
+                      "V": 11, "H": 12, "D": 13, "X": 14, "N": 14}
+    RNA_dictionary = {"A": 0, "U": 1, "G": 2, "C": 3, "K": 4, "M": 5, "R": 6, "Y": 7, "S": 8, "W": 9, "B": 10,
+                      "V": 11, "H": 12, "D": 13, "X": 14, "N": 14}
+    Show_dict = {A: B for B, A in DNA_dictionary.items()}
+    Show_dict_RNA = {A: B for B, A in RNA_dictionary.items()}
+
+    # K = G or T
+    # M = A or C
+    # R = A or G
+    # Y = C or T
+    # S = C or G
+    # W = A or T
+    # B = C or T or G
+    # V = A or C or G
+    # H = A or C or T
+    # D = A or G or T
+    # X or N = A or T or G or C
+
+    def __init__(self, sequence_string):
+        sequence_string = sequence_string.upper()
+        self.numerical_Sequence = []
+
+        for i in sequence_string:
+            self.numerical_Sequence.append(self.DNA_dictionary[i])
+
+    def __repr__(self):
+        return str(self.numerical_Sequence)
+
+    def toList(self, primer):
+        for i in self.numerical_Sequence:
+            primer.append(self.numerical_Sequence[i])
+
+    def __len__(self):
+        return self.numerical_Sequence.__len__()
+
+    def encrypt(self, string, length):
+        return [string[i:i + length] for i in range(0, len(string), length)]
+
+    def comma_adder(self, string, length=3):
+        return ','.join(string[i:i + length] for i in range(0, len(string), length))
+
+    def findORFs(self):
+
+        codonToAA = {
+            "TTT": "F",
+            "TTC": "F",
+            "TTA": "L",
+            "TTG": "L",
+            "CTT": "L",
+            "CTC": "L",
+            "CTA": "L",
+            "CTG": "L",
+            "ATT": "I",
+            "ATC": "I",
+            "ATA": "I",
+            "ATG": "M",
+            "GTT": "V",
+            "GTC": "V",
+            "GTA": "V",
+            "GTG": "V",
+            "TCT": "S",
+            "TCC": "S",
+            "TCA": "S",
+            "TCG": "S",
+            "CCT": "P",
+            "CCC": "P",
+            "CCA": "P",
+            "CCG": "P",
+            "ACT": "T",
+            "ACC": "T",
+            "ACA": "T",
+            "ACG": "T",
+            "GCU": "A",
+            "GCC": "A",
+            "GCA": "A",
+            "GCG": "A",
+            "TAT": "Y",
+            "TAC": "Y",
+            "TAA": "__Ochre/Stop",
+            "TAG": "__Amber/Stop",
+            "CAT": "H",
+            "CAC": "H",
+            "CAA": "Q",
+            "CAG": "Q",
+            "AAT": "N",
+            "AAC": "N",
+            "AAA": "K",
+            "AAG": "K",
+            "GAT": "D",
+            "GAC": "D",
+            "GAA": "E",
+            "GAG": "E",
+            "TGT": "C",
+            "TGC": "C",
+            "TGA": "__Opal (Stop)",
+            "TGG": "W",
+            "CGT": "R",
+            "CGC": "R",
+            "CGA": "R",
+            "CGG": "R",
+            "AGT": "S",
+            "AGC": "S",
+            "AGA": "R",
+            "AGG": "R",
+            "GGT": "G",
+            "GGC": "G",
+            "GGA": "G",
+            "GGG": "G",
+            "GCT": "A",
+        }
+
+        pattern = re.compile(r'(?=(ATG(?:...)*?)(?<=TAG|TGA|TAA))')
+        Seq = [self.Show_dict[i] for i in self.numerical_Sequence]
+        whole_seq = "".join(Seq)
+        tes = pattern.findall(whole_seq)  # forward search
+
+        # [print(comma_adder(x,)) for x in tes]
+
+        valid_seq = [[codonToAA[x] for x in self.encrypt(t, 3)] for t in tes]
+        valid_codon_number = 0
+        for x in tes:
+            print(self.comma_adder(x))
+            print(valid_seq[valid_codon_number])
+            print("The Protein Sequence:", "".join(valid_seq[valid_codon_number]))
+
+            valid_codon_number += 1
+            print("---------------- Codon " + str(valid_codon_number) + " ----------------")
+
+    def finditerORFs(self):
+        seq = "TTTATGTCATAGTCATTTATGTTCATAGATTAAATTTATGTCATAGTCATTTATGTTCATAGATTAAATTTATGTCATAGTCATTTATGTTCATAGATTAAAGAAATAGCTCCCAGAAAA"
+
+        test1 = [m.start() for m in re.finditer('ATG', seq)]
+        for i in range(len(test1)):
+            print(test1)
+
+    def show(self):
+        number_subject = []
+        show = []
+        self.toList(number_subject)
+        for i in number_subject:
+            show.append(self.Show_dict[i])
+        output = "".join(show)
+        return output
+
+    def primerSlice(self, fromWhere, toWhere):
+        my_seq = []
+        slicer = deque("")
+        String_deque = deque("")
+        self.toList(my_seq)
+        for i in my_seq[fromWhere - 1:toWhere - 1]:
+            slicer.append(i)
+        for i in slicer:
+            String_deque.append(self.Show_dict[i])
+        return String_deque
+
+    def GCPercentage(self):  # A:0    T:1     G:2     C:3
+        my_list = []
+        self.toList(my_list)
+        Adenine = my_list.count(0)
+        Thymine = my_list.count(1)
+        Guanine = my_list.count(2)
+        Cytosine = my_list.count(3)
+
+        total = Adenine + Thymine + Guanine + Cytosine
+
+        GC_ratio = ((Guanine + Cytosine) / total)
+        "{:.2f}".format(GC_ratio)
+
+        AT_ratio = 1 - GC_ratio
+
+        return GC_ratio
+
+    def DNAtoRNA(self):
+        my_list = []
+        RNA = []
+        for i in self.numerical_Sequence:
+            my_list.append(i)
+
+        for i in my_list:
+            RNA.append(self.Show_dict_RNA[i])
+
+        output = "".join(RNA)
+        return output
+
+    def reverse(self):
+        my_list = []
+        for i in self.numerical_Sequence[::-1]:
+            my_list.append(i)
+        str_list = [self.Show_dict[i] for i in my_list]
+
+        output = "".join(str_list)
+        return output
+
+    def complementary(self):
+        my_list = []
+        self.toList(my_list)
+        numerical_list = []
+        for i in self.numerical_Sequence:
+            if i == 0:
+                numerical_list.append(1)
+            elif i == 1:
+                numerical_list.append(0)
+            elif i == 2:
+                numerical_list.append(3)
+            elif i == 3:
+                numerical_list.append(2)
+        str_list = [self.Show_dict[i] for i in numerical_list]
+        output = "".join(str_list)
+        return output
+
+    def reverse_complementary(self):
+        my_list = []
+        my_reverse = []
+        my_reverse_complementary = []
+        str_reverse_complementary = []
+
+        self.toList(my_list)
+        for i in self.numerical_Sequence[::-1]:
+            my_reverse.append(i)
+        for i in my_reverse:
+            if i == 0:
+                my_reverse_complementary.append(1)
+            elif i == 1:
+                my_reverse_complementary.append(0)
+            elif i == 2:
+                my_reverse_complementary.append(3)
+            elif i == 3:
+                my_reverse_complementary.append(2)
+            elif i == 8:
+                my_reverse_complementary.append(8)
+            elif i == 9:
+                my_reverse_complementary.append(9)
+        for i in my_reverse_complementary:
+            str_reverse_complementary.append(self.Show_dict[i])
+        output = "".join(str_reverse_complementary)
+        return output
+
+    def ORF(self):
+
+        for i in self.numerical_Sequence:
+            "".join(self.Show_dict[i])
+        codonToAA = {
+            "TTT": "F",
+            "TTC": "F",
+            "TTA": "L",
+            "TTG": "L",
+            "CTT": "L",
+            "CTC": "L",
+            "CTA": "L",
+            "CTG": "L",
+            "ATT": "I",
+            "ATC": "I",
+            "ATA": "I",
+            "ATG": "M",
+            "GTT": "V",
+            "GTC": "V",
+            "GTA": "V",
+            "GTG": "V",
+            "TCT": "S",
+            "TCC": "S",
+            "TCA": "S",
+            "TCG": "S",
+            "CCT": "P",
+            "CCC": "P",
+            "CCA": "P",
+            "CCG": "P",
+            "ACT": "T",
+            "ACC": "T",
+            "ACA": "T",
+            "ACG": "T",
+            "GCU": "A",
+            "GCC": "A",
+            "GCA": "A",
+            "GCG": "A",
+            "TAT": "Y",
+            "TAC": "Y",
+            "TAA": "__Ochre/Stop",
+            "TAG": "__Amber/Stop",
+            "CAT": "H",
+            "CAC": "H",
+            "CAA": "Q",
+            "CAG": "Q",
+            "AAT": "N",
+            "AAC": "N",
+            "AAA": "K",
+            "AAG": "K",
+            "GAT": "D",
+            "GAC": "D",
+            "GAA": "E",
+            "GAG": "E",
+            "TGT": "C",
+            "TGC": "C",
+            "TGA": "__Opal (Stop)***",
+            "TGG": "W",
+            "CGT": "R",
+            "CGC": "R",
+            "CGA": "R",
+            "CGG": "R",
+            "AGT": "S",
+            "AGC": "S",
+            "AGA": "R",
+            "AGG": "R",
+            "GGT": "G",
+            "GGC": "G",
+            "GGA": "G",
+            "GGG": "G",
+            "GCT": "A",
+        }
+
+        def encrypt(string, length):
+            return [string[i:i + length] for i in range(0, len(string), length)]
+
+        def comma_adder(string, length=3):
+            return ','.join(string[i:i + length] for i in range(0, len(string), length))
+
+        def findORFs():
+            pattern = re.compile(r'(?=(ATG(?:...)*?)(?<=TAG|TGA|TAA))')
+            Sequ = input("enter seq> ")
+            tes = pattern.findall(Sequ)  # forward search
+
+            # [print(comma_adder(x,)) for x in tes]
+
+            valid_seq = [[codonToAA[x] for x in encrypt(t, 3)] for t in tes]
+            valid_codon_number = 0
+            for x in tes:
+                print(comma_adder(x))
+                print(valid_seq[valid_codon_number])
+                print("".join(valid_seq[valid_codon_number]))
+
+                valid_codon_number += 1
+                print("---------------- Codon " + str(valid_codon_number) + " ----------------")
+
+        def finditerORFs():
+            seq = "TTTATGTCATAGTCATTTATGTTCATAGATTAAATTTATGTCATAGTCATTTATGTTCATAGATTAAATTTATGTCATAGTCATTTATGTTCATAGATTAAAGAAATAGCTCCCAGAAAA"
+
+            test1 = [m.start() for m in re.finditer('ATG', seq)]
+            for i in range(len(test1)):
+                print(test1)
+
+        if __name__ == "__main__":
+            findORFs()
